@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sewing PPC Factory Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f6fa;color:#17202a}
+header{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;padding:24px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+header h1{margin:0 0 8px;font-size:28px}header p{margin:0;opacity:.85}.ai-badge{background:#16a34a;padding:10px 16px;border-radius:20px;font-weight:bold;font-size:12px}
+.container{max-width:1800px;margin:auto;padding:20px}.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 3px 12px rgba(0,0,0,.07)}
+h2{margin-top:0;color:#172554}h3{color:#1e3a8a}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:6px;min-width:145px}.field label{font-size:12px;font-weight:bold;color:#475569}
+input,select{padding:9px 10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;min-height:38px}
+button{border:0;border-radius:7px;padding:10px 15px;cursor:pointer;font-weight:bold}button:hover{opacity:.9}
+.btn-primary{background:#2563eb;color:#fff}.btn-success{background:#16a34a;color:#fff}.btn-warning{background:#f59e0b;color:#111827}.btn-danger{background:#dc2626;color:#fff}.btn-dark{background:#111827;color:#fff}.btn-light{background:#e2e8f0;color:#1e293b}
+.kpi-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:14px;margin-bottom:20px}.kpi{background:#fff;border-radius:12px;padding:18px;box-shadow:0 3px 12px rgba(0,0,0,.06);border-left:5px solid #2563eb}
+.kpi-title{font-size:12px;font-weight:bold;color:#64748b}.kpi-value{font-size:25px;font-weight:bold;margin:8px 0}.kpi-small{font-size:11px;color:#64748b}
+.filter-summary{margin-top:10px;padding:9px 12px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:5px;font-size:13px}
+.section-note{background:#f8fafc;padding:10px;border-radius:7px;margin-bottom:15px;color:#475569;font-size:13px}
+.upload-box{background:#eff6ff;border:1px dashed #2563eb;padding:15px;border-radius:10px;margin-bottom:15px}.upload-box strong{color:#172554}
+.table-wrap{overflow:auto;max-width:100%}table{width:100%;border-collapse:collapse;min-width:1500px}
+th{background:#172554;color:#fff;padding:9px 7px;font-size:11px;white-space:nowrap;position:sticky;top:0;z-index:2}
+td{padding:7px;border-bottom:1px solid #e2e8f0;font-size:11px;white-space:nowrap}tr:hover td{background:#f8fafc}
+td input,td select{width:100%;min-width:80px;padding:6px;font-size:11px}
+.status-running{background:#dcfce7!important;color:#166534;font-weight:bold}.status-upcoming{background:#fef3c7!important;color:#92400e;font-weight:bold}
+.risk-green{background:#dcfce7;color:#166534;padding:5px 8px;border-radius:15px;font-weight:bold}.risk-yellow{background:#fef3c7;color:#92400e;padding:5px 8px;border-radius:15px;font-weight:bold}.risk-red{background:#fee2e2;color:#991b1b;padding:5px 8px;border-radius:15px;font-weight:bold}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}.chart-box{height:350px;background:#fff}.ai-box{background:linear-gradient(135deg,#eff6ff,#f8fafc);border-left:5px solid #2563eb;padding:20px;border-radius:10px}.ai-item{padding:10px;margin:7px 0;background:#fff;border-radius:7px;border:1px solid #e2e8f0}
+.calendar-wrap{overflow:auto}.calendar-table{min-width:1800px}.calendar-style{font-weight:bold;color:#1e3a8a}
+.capacity-filter-box{background:#f8fafc;padding:15px;border-radius:10px;margin-bottom:15px}.capacity-summary-total{margin-top:12px;padding:10px;background:#fff;border-radius:7px;font-weight:bold}
+.legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:10px;font-size:12px}.legend span{padding:5px 9px;border-radius:5px}.legend-running{background:#dcfce7}.legend-upcoming{background:#fef3c7}.legend-risk{background:#fee2e2}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}header h1{font-size:22px}}
+@media print{.no-print,button{display:none!important}body{background:#fff}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<header><div><h1>🧵 Sewing PPC Factory Dashboard</h1><p>Line Planning • CSV Upload • Learning Curve • Actual Production • Target vs Actual • PCD Risk</p></div><div class="ai-badge">NARROW AI PLANNING ASSISTANT</div></header>
+<div class="container">
+
+<div class="card">
+<h2>⚙️ Planning Settings</h2>
+<div class="controls">
+<div class="field"><label>Default Efficiency %</label><input id="defaultEfficiency" type="number" value="75" min="1" max="150"></div>
+<div class="field"><label>Working Hours / Day</label><input id="defaultHours" type="number" value="8" min="1" max="24" step=".5"></div>
+<div class="field"><label>Working Pattern</label><select id="workingPattern"><option value="6">6 Days Working</option><option value="5">5 Days Working</option><option value="7">7 Days Working</option></select></div>
+<div class="field"><label>Calendar Days</label><input id="calendarDays" type="number" value="31" min="7" max="90"></div>
+<div class="field"><label>LC Day 1 %</label><input id="lcDay1" type="number" value="25" min="1" max="100"></div>
+<div class="field"><label>LC Day 2 %</label><input id="lcDay2" type="number" value="40" min="1" max="100"></div>
+<div class="field"><label>LC Day 3 %</label><input id="lcDay3" type="number" value="50" min="1" max="100"></div>
+<div class="field"><label>LC Day 4-6 %</label><input id="lcDay4to6" type="number" value="60" min="1" max="100"></div>
+<div class="field"><label>LC Day 7+ %</label><input id="lcDay7Plus" type="number" value="70" min="1" max="100"></div>
+<button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+</div></div>
+
+<div class="card no-print"><div class="controls">
+<button class="btn-primary" onclick="addPlanningRow()">➕ Add Planning Row</button>
+<button class="btn-success" onclick="recalculateAll()">🔄 Recalculate</button>
+<button class="btn-warning" onclick="runAI()">🤖 Run Narrow AI</button>
+<button class="btn-light" onclick="exportPlanningCSV()">⬇ Planning CSV</button>
+<button class="btn-light" onclick="exportActualCSV()">⬇ Actual CSV</button>
+<button class="btn-dark" onclick="window.print()">🖨 Print</button>
+<button class="btn-danger" onclick="resetDemo()">Reset Demo</button>
+</div></div>
+
+<div class="card no-print">
+<h2>📅 Main Dashboard Date Filter</h2><div class="controls">
+<div class="field"><label>From Date</label><input type="date" id="dashboardFromDate"></div>
+<div class="field"><label>To Date</label><input type="date" id="dashboardToDate"></div>
+<button class="btn-primary" onclick="applyDashboardDateFilter()">🔎 Apply Dashboard Filter</button>
+<button class="btn-light" onclick="clearDashboardDateFilter()">🔄 Clear</button>
+<button class="btn-warning" onclick="setCurrentMonthDashboard()">📆 Current Month</button>
+<button class="btn-success" onclick="setCurrentWeekDashboard()">📅 Current Week</button>
+</div><div class="filter-summary" id="dashboardFilterSummary"></div></div>
+
+<div class="kpi-grid">
+<div class="kpi"><div class="kpi-title">Total Planned Qty</div><div class="kpi-value" id="kpiPlanned">0</div><div class="kpi-small">Selected dashboard period</div></div>
+<div class="kpi"><div class="kpi-title">Base Daily Target</div><div class="kpi-value" id="kpiBaseTarget">0</div><div class="kpi-small">Before learning curve</div></div>
+<div class="kpi"><div class="kpi-title">Actual Output</div><div class="kpi-value" id="kpiActual">0</div><div class="kpi-small">Manual actual entry</div></div>
+<div class="kpi"><div class="kpi-title">Achievement</div><div class="kpi-value" id="kpiAchievement">0%</div><div class="kpi-small">Actual / Target</div></div>
+<div class="kpi"><div class="kpi-title">Target Shortfall</div><div class="kpi-value" id="kpiShortfall">0</div><div class="kpi-small">Target - Actual</div></div>
+<div class="kpi"><div class="kpi-title">Today Target / Actual</div><div class="kpi-value" id="kpiToday">0 / 0</div><div class="kpi-small">Factory today</div></div>
+<div class="kpi"><div class="kpi-title">Total SAM</div><div class="kpi-value" id="kpiSAM">0</div><div class="kpi-small">Planned Qty × SMV</div></div>
+<div class="kpi"><div class="kpi-title">High PCD Risks</div><div class="kpi-value" id="kpiRisk">0</div><div class="kpi-small">Shipment risk</div></div>
+</div>
+
+<div class="card">
+<h2>📋 Sewing Line Planning</h2>
+<div class="section-note">You can manually add/edit planning rows OR upload a CSV. CSV upload supports <b>Replace All</b> and <b>Add to Existing</b>. Header names are matched automatically.</div>
+
+<div class="upload-box no-print">
+<strong>📤 Upload Planning CSV</strong>
+<div style="margin-top:8px">Recommended columns:
+<code>Line, Status, PO, Buyer, Style, Planned Qty, SMV, Operators, Achieve %, Hours/Day, Start Date, OTS Date</code></div>
+<div class="controls" style="margin-top:12px">
+<input type="file" id="planningCSVFile" accept=".csv,text/csv">
+<button class="btn-primary" onclick="uploadPlanningCSV('replace')">⬆ Replace All with CSV</button>
+<button class="btn-success" onclick="uploadPlanningCSV('append')">➕ Add CSV to Existing</button>
+<button class="btn-light" onclick="downloadCSVTemplate()">⬇ CSV Template</button>
+</div>
+<div class="filter-summary" id="csvUploadSummary">No CSV uploaded yet.</div>
+</div>
+
+<div class="controls no-print">
+<div class="field"><label>Style Status Filter</label><select id="planningStatusFilter" onchange="renderPlanning()"><option value="">All Status</option><option value="Running">Running</option><option value="Upcoming">Upcoming</option></select></div>
+<button class="btn-primary" onclick="renderPlanning()">🔎 Apply Status Filter</button>
+<button class="btn-light" onclick="clearPlanningStatusFilter()">🔄 Clear Status Filter</button>
+</div>
+<div class="filter-summary" id="planningFilterSummary">All Running & Upcoming styles</div>
+<div class="table-wrap"><table id="planningTable"><thead><tr>
+<th>Line</th><th>Status</th><th>PO</th><th>Buyer</th><th>Style</th><th>Planned Qty</th><th>SMV</th><th>Operators</th><th>Achieve %</th><th>Hours/Day</th><th>Start Date</th><th>OTS Date</th><th>Total SAM</th><th>Effective Min/Day</th><th>Base Daily Target</th><th>Production Days</th><th>Avg LC %</th><th>Calculated Finish</th><th>OTS Loading %</th><th>Risk</th><th>Action</th>
+</tr></thead><tbody id="planningBody"></tbody></table></div>
+<div class="legend"><span class="legend-running">🟢 Running</span><span class="legend-upcoming">🟡 Upcoming</span><span class="legend-risk">🔴 High Risk</span></div>
+</div>
+
+<div class="card">
+<h2>📝 Daily Actual Production Entry</h2><div class="section-note">Actual Qty is saved automatically in your browser.</div>
+<div class="controls no-print">
+<div class="field"><label>Date</label><input type="date" id="actualFilterDate"></div>
+<div class="field"><label>Line</label><select id="actualFilterLine"><option value="">All Lines</option></select></div>
+<div class="field"><label>PO</label><select id="actualFilterPO"><option value="">All POs</option></select></div>
+<div class="field"><label>Buyer</label><select id="actualFilterBuyer"><option value="">All Buyers</option></select></div>
+<div class="field"><label>Style</label><select id="actualFilterStyle"><option value="">All Styles</option></select></div>
+<button class="btn-primary" onclick="renderActualTable()">🔎 Apply Filter</button><button class="btn-light" onclick="clearActualFilters()">🔄 Clear Filter</button>
+</div><div class="filter-summary" id="filterSummary"></div>
+<div class="table-wrap"><table><thead><tr><th>Date</th><th>Line</th><th>PO</th><th>Buyer</th><th>Style</th><th>Day</th><th>LC %</th><th>Target Qty</th><th>Actual Qty</th><th>Variance</th><th>Achievement %</th><th>Status</th></tr></thead><tbody id="actualBody"></tbody></table></div>
+</div>
+
+<div class="card"><h2>📊 Target vs Actual Dashboard</h2><div class="controls no-print">
+<div class="field"><label>Line</label><select id="chartLineFilter" onchange="renderCharts()"><option value="">All Lines</option></select></div>
+<div class="field"><label>Period</label><select id="chartPeriod" onchange="renderCharts()"><option value="7">Last 7 Days</option><option value="14">Last 14 Days</option><option value="30" selected>Last 30 Days</option><option value="60">Last 60 Days</option><option value="90">Last 90 Days</option></select></div>
+</div><div class="grid2"><div><h3>Daily Target vs Actual</h3><div class="chart-box"><canvas id="dailyChart"></canvas></div></div><div><h3>Line-wise Target vs Actual</h3><div class="chart-box"><canvas id="lineChart"></canvas></div></div></div></div>
+
+<div class="card"><h2>🏭 Line Performance Summary</h2><div class="controls no-print"><div class="field"><label>Line Filter</label><select id="linePerformanceFilter" onchange="renderLinePerformance"><option value="">All Lines</option></select></div><button class="btn-light" onclick="clearLinePerformanceFilter()">🔄 Clear Filter</button></div><div class="filter-summary" id="linePerformanceFilterSummary"></div><div class="table-wrap"><table><thead><tr><th>Line</th><th>Target Qty</th><th>Actual Qty</th><th>Variance</th><th>Achievement %</th><th>Planned Qty</th><th>Actual Produced</th><th>Balance Planned</th><th>Status</th></tr></thead><tbody id="linePerformanceBody"></tbody></table></div></div>
+
+<div class="card"><div class="ai-box"><h3>🤖 Narrow AI Planning Assistant</h3><div id="aiOutput">Click "Run Narrow AI" to analyze PCD, efficiency, capacity and actual production.</div></div></div>
+
+<div class="card"><h2>📅 Horizontal Production Calendar</h2><div class="section-note">T = Target | A = Actual | LC = Learning Curve</div><div class="calendar-wrap"><table class="calendar-table"><thead id="calendarHead"></thead><tbody id="calendarBody"></tbody></table></div></div>
+
+<div class="card"><h2>📦 Line Capacity & OTS Summary</h2><div class="capacity-filter-box no-print"><div class="controls">
+<div class="field"><label>Style</label><select id="capacityStyleFilter" onchange="renderCapacity()"><option value="">All Styles</option></select></div>
+<div class="field"><label>Running / Upcoming</label><select id="capacityStatusFilter" onchange="renderCapacity()"><option value="">All Status</option><option value="Running">Running</option><option value="Upcoming">Upcoming</option></select></div>
+<button class="btn-primary" onclick="renderCapacity()">🔎 Apply</button><button class="btn-light" onclick="clearCapacityStyleFilter()">🔄 Clear</button>
+</div><div class="filter-summary" id="capacityFilterSummary">All Styles</div><div class="capacity-summary-total" id="capacitySummaryTotals"></div></div>
+<div class="table-wrap"><table><thead><tr><th>Line</th><th>Status</th><th>PO</th><th>Buyer</th><th>Style</th><th>Planned Qty</th><th>Base Daily Target</th><th>Efficiency</th><th>OTS Loading %</th><th>Calculated Finish</th><th>OTS Date</th><th>Production Days</th><th>Risk</th></tr></thead><tbody id="capacityBody"></tbody></table></div></div>
+
+<footer class="card" style="text-align:center;color:#64748b">Sewing PPC Factory Dashboard • Data is stored locally in your browser.</footer>
+</div>
+
+<script>
+let planningData=[],actualData={},dailyChart=null,lineChart=null;
+let settings={efficiency:75,hours:8,workingPattern:6,calendarDays:31,lcDay1:25,lcDay2:40,lcDay3:50,lcDay4to6:60,lcDay7Plus:70};
+
+const getToday=()=>new Date().toISOString().split("T")[0];
+function addDays(s,n){let d=new Date(s+"T00:00:00");d.setDate(d.getDate()+n);return d.toISOString().split("T")[0]}
+function createDemoData(){let t=getToday();planningData=[
+{id:1,line:"Line 1",status:"Running",po:"PO-1001",buyer:"Kappahl",style:"ACLAFOUTIS GIRLS BLOUSE",qty:5000,smv:8.5,operators:28,achieve:75,hours:8,start:t,ots:addDays(t,10)},
+{id:2,line:"Line 1",status:"Upcoming",po:"PO-1002",buyer:"H&M",style:"ZKGAP0302-26032 GIRLS BLOUSE",qty:7000,smv:9.2,operators:30,achieve:75,hours:8,start:addDays(t,8),ots:addDays(t,20)},
+{id:3,line:"Line 2",status:"Running",po:"PO-1003",buyer:"C&A",style:"ROZIE GIRLS DRESS",qty:6500,smv:12,operators:32,achieve:80,hours:8,start:t,ots:addDays(t,14)},
+{id:4,line:"Line 3",status:"Running",po:"PO-1004",buyer:"Kappahl",style:"AMIRAL BOYS SHIRT",qty:8000,smv:10.5,operators:34,achieve:78,hours:8,start:addDays(t,-2),ots:addDays(t,15)},
+{id:5,line:"Line 4",status:"Upcoming",po:"PO-1005",buyer:"H&M",style:"CORAGE DENIM BOYS SHIRT",qty:4500,smv:11,operators:29,achieve:75,hours:8,start:addDays(t,5),ots:addDays(t,17)}]}
+function saveData(){localStorage.setItem("sewingPlanningData",JSON.stringify(planningData));localStorage.setItem("sewingActualData",JSON.stringify(actualData));localStorage.setItem("sewingSettings",JSON.stringify(settings))}
+function loadData(){let p=localStorage.getItem("sewingPlanningData"),a=localStorage.getItem("sewingActualData"),s=localStorage.getItem("sewingSettings");p?planningData=JSON.parse(p):createDemoData();if(a)actualData=JSON.parse(a);if(s)settings={...settings,...JSON.parse(s)}}
+function loadSettingsUI(){["defaultEfficiency","defaultHours","workingPattern","calendarDays","lcDay1","lcDay2","lcDay3","lcDay4to6","lcDay7Plus"].forEach((id,i)=>{let k=["efficiency","hours","workingPattern","calendarDays","lcDay1","lcDay2","lcDay3","lcDay4to6","lcDay7Plus"][i];document.getElementById(id).value=settings[k]})}
+function saveSettings(){settings.efficiency=+defaultEfficiency.value;settings.hours=+defaultHours.value;settings.workingPattern=+workingPattern.value;settings.calendarDays=+calendarDays.value;settings.lcDay1=+lcDay1.value;settings.lcDay2=+lcDay2.value;settings.lcDay3=+lcDay3.value;settings.lcDay4to6=+lcDay4to6.value;settings.lcDay7Plus=+lcDay7Plus.value;saveData();recalculateAll();alert("Settings saved successfully.")}
+function getLC(d){return d<=1?settings.lcDay1:d===2?settings.lcDay2:d===3?settings.lcDay3:d<=6?settings.lcDay4to6:settings.lcDay7Plus}
+function isWorkingDay(s){let d=new Date(s+"T00:00:00").getDay();return settings.workingPattern===7||settings.workingPattern===6?d!==0:d!==0&&d!==6}
+function calculateRow(r){let totalSAM=+r.qty*+r.smv,effectiveMinutes=+r.operators*+r.hours*60*(+r.achieve/100),baseTarget=+r.smv>0?Math.floor(effectiveMinutes/+r.smv):0,remaining=+r.qty,day=1,date=r.start,productionDays=0,totalLC=0,finish=r.start;
+while(remaining>0&&day<=settings.calendarDays){if(isWorkingDay(date)){let lc=getLC(day),target=Math.floor(baseTarget*lc/100);remaining-=target;totalLC+=lc;productionDays++;finish=date;day++}date=addDays(date,1)}
+let avgLC=productionDays?totalLC/productionDays:0,daysToOTS=Math.max(1,Math.round((new Date(r.ots)-new Date(r.start))/86400000)+1),otsLoading=productionDays/daysToOTS*100,risk=new Date(finish)>new Date(r.ots)?"HIGH":otsLoading>85?"MEDIUM":"LOW";return{totalSAM,effectiveMinutes,baseTarget,productionDays,avgLC,finish,otsLoading,risk}}
+function renderPlanning(){let b=planningBody;b.innerHTML="";let f=planningStatusFilter.value,rows=planningData.filter(r=>!f||r.status===f);planningFilterSummary.textContent=f?`Showing ${f} styles: ${rows.length}`:`Showing all styles: ${rows.length}`;
+rows.forEach(r=>{let c=calculateRow(r),tr=document.createElement("tr");tr.innerHTML=`
+<td><input value="${esc(r.line)}" onchange="updatePlanning(${r.id},'line',this.value)"></td>
+<td><select class="${r.status==="Running"?"status-running":"status-upcoming"}" onchange="updatePlanning(${r.id},'status',this.value)"><option ${r.status==="Running"?"selected":""}>Running</option><option ${r.status==="Upcoming"?"selected":""}>Upcoming</option></select></td>
+<td><input value="${esc(r.po)}" onchange="updatePlanning(${r.id},'po',this.value)"></td><td><input value="${esc(r.buyer)}" onchange="updatePlanning(${r.id},'buyer',this.value)"></td><td><input value="${esc(r.style)}" onchange="updatePlanning(${r.id},'style',this.value)"></td>
+<td><input type="number" value="${r.qty}" onchange="updatePlanning(${r.id},'qty',this.value)"></td><td><input type="number" step=".01" value="${r.smv}" onchange="updatePlanning(${r.id},'smv',this.value)"></td><td><input type="number" value="${r.operators}" onchange="updatePlanning(${r.id},'operators',this.value)"></td>
+<td><input type="number" value="${r.achieve}" onchange="updatePlanning(${r.id},'achieve',this.value)"></td><td><input type="number" step=".5" value="${r.hours}" onchange="updatePlanning(${r.id},'hours',this.value)"></td>
+<td><input type="date" value="${r.start}" onchange="updatePlanning(${r.id},'start',this.value)"></td><td><input type="date" value="${r.ots}" onchange="updatePlanning(${r.id},'ots',this.value)"></td>
+<td>${Math.round(c.totalSAM).toLocaleString()}</td><td>${Math.round(c.effectiveMinutes).toLocaleString()}</td><td>${c.baseTarget.toLocaleString()}</td><td>${c.productionDays}</td><td>${c.avgLC.toFixed(1)}%</td><td>${c.finish}</td><td>${c.otsLoading.toFixed(1)}%</td>
+<td><span class="${c.risk==="HIGH"?"risk-red":c.risk==="MEDIUM"?"risk-yellow":"risk-green"}">${c.risk}</span></td><td><button class="btn-danger" onclick="deletePlanning(${r.id})">Delete</button></td>`;b.appendChild(tr)})}
+function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function updatePlanning(id,k,v){let r=planningData.find(x=>x.id===id);if(!r)return;r[k]=["qty","smv","operators","achieve","hours"].includes(k)?+v:v;saveData();recalculateAll()}
+function addPlanningRow(){let t=getToday();planningData.push({id:Date.now(),line:"Line 1",status:"Upcoming",po:"NEW-PO",buyer:"Buyer",style:"New Style",qty:1000,smv:10,operators:25,achieve:settings.efficiency,hours:settings.hours,start:t,ots:addDays(t,10)});saveData();recalculateAll()}
+function deletePlanning(id){if(confirm("Delete this planning row?")){planningData=planningData.filter(r=>r.id!==id);saveData();recalculateAll()}}
+function clearPlanningStatusFilter(){planningStatusFilter.value="";renderPlanning()}
+
+function parseCSV(text){let rows=[],row=[],cell="",q=false;for(let i=0;i<text.length;i++){let ch=text[i],nx=text[i+1];if(ch==='"'){if(q&&nx==='"'){cell+='"';i++}else q=!q}else if(ch===','&&!q){row.push(cell);cell=""}else if((ch==='\n'||ch==='\r')&&!q){if(ch==='\r'&&nx==='\n')i++;row.push(cell);if(row.some(x=>x.trim()!==""))rows.push(row);row=[];cell=""}else cell+=ch}row.push(cell);if(row.some(x=>x.trim()!==""))rows.push(row);return rows}
+function norm(s){return String(s??"").toLowerCase().replace(/[^a-z0-9]/g,"")}
+function findCol(headers,names){let hs=headers.map(norm);for(let n of names){let i=hs.indexOf(norm(n));if(i>=0)return i}return -1}
+function csvDate(v){if(!v)return getToday();let s=String(v).trim();if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m)return `${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;let d=new Date(s);return isNaN(d)?getToday():d.toISOString().split("T")[0]}
+function uploadPlanningCSV(mode){let f=planningCSVFile.files[0];if(!f){alert("Please select a CSV file first.");return}let rd=new FileReader();rd.onload=e=>{try{let rows=parseCSV(e.target.result);if(rows.length<2)throw Error("CSV has no data rows.");let h=rows[0],idx={line:findCol(h,["Line"]),status:findCol(h,["Status","Running/Upcoming","Style Status"]),po:findCol(h,["PO","PO No","PONo","Purchase Order"]),buyer:findCol(h,["Buyer"]),style:findCol(h,["Style","Style Name"]),qty:findCol(h,["Planned Qty","Qty","Quantity","Plan Qty"]),smv:findCol(h,["SMV","SAM"]),operators:findCol(h,["Operators","Operator","Manpower","MP"]),achieve:findCol(h,["Achieve %","Achievement %","Efficiency %","Efficiency"]),hours:findCol(h,["Hours/Day","Hours","Working Hours"]),start:findCol(h,["Start Date","Start","Plan Start"]),ots:findCol(h,["OTS Date","OTS","Shipment Date","PCD"])};
+if(idx.style<0||idx.qty<0)throw Error("CSV must contain at least Style and Planned Qty columns.");
+let base=mode==="append"?planningData:[],used=new Set(base.map(r=>r.id)),out=[];
+rows.slice(1).forEach((a,n)=>{let val=k=>idx[k]>=0?a[idx[k]]?.trim():"";let st=/^running$/i.test(val("status"))?"Running":"Upcoming";let id=Date.now()+n;while(used.has(id))id++;used.add(id);out.push({id,line:val("line")||"Line 1",status:st,po:val("po")||"NEW-PO",buyer:val("buyer")||"Buyer",style:val("style"),qty:Number(String(val("qty")).replace(/,/g,""))||0,smv:Number(val("smv"))||10,operators:Number(val("operators"))||25,achieve:Number(val("achieve"))||settings.efficiency,hours:Number(val("hours"))||settings.hours,start:csvDate(val("start")),ots:csvDate(val("ots"))});});
+planningData=base.concat(out);saveData();recalculateAll();csvUploadSummary.textContent=`Uploaded ${out.length} planning rows from "${f.name}" (${mode==="append"?"added to existing data":"replaced existing data"}).`;alert(`CSV uploaded successfully: ${out.length} planning rows.`)
+}catch(err){csvUploadSummary.textContent="Upload failed: "+err.message;alert("CSV upload failed: "+err.message)}};rd.readAsText(f)}
+function downloadCSVTemplate(){let rows=[["Line","Status","PO","Buyer","Style","Planned Qty","SMV","Operators","Achieve %","Hours/Day","Start Date","OTS Date"],["Line 1","Running","PO-1001","Kappahl","SAMPLE GIRLS BLOUSE","5000","8.5","28","75","8",getToday(),addDays(getToday(),10)]];downloadCSV("Sewing_Planning_Template.csv",rows)}
+
+function actualKey(d,id){return d+"_"+id}
+function getTargetForDate(r,date){if(date<r.start||date>r.ots)return 0;let cur=r.start,day=1;while(cur<date){if(isWorkingDay(cur))day++;cur=addDays(cur,1)}if(!isWorkingDay(date))return 0;let c=calculateRow(r);return Math.floor(c.baseTarget*getLC(day)/100)}
+function renderActualTable(){let b=actualBody;b.innerHTML="";let df=actualFilterDate.value,lf=actualFilterLine.value,pf=actualFilterPO.value,bf=actualFilterBuyer.value,sf=actualFilterStyle.value,t=getToday(),dates=[];planningData.forEach(r=>{let d=r.start<t?t:r.start;for(let i=0;i<31;i++){dates.push(d);d=addDays(d,1)}});dates=[...new Set(dates)].sort();if(df)dates=[df];let count=0;dates.forEach(date=>planningData.forEach(r=>{if(lf&&r.line!==lf||pf&&r.po!==pf||bf&&r.buyer!==bf||sf&&r.style!==sf)return;let target=getTargetForDate(r,date),key=actualKey(date,r.id),actual=Number(actualData[key]||0);if(target===0&&!actual)return;let day=1,d=r.start;while(d<date){if(isWorkingDay(d))day++;d=addDays(d,1)}let lc=getLC(day),variance=actual-target,ach=target?actual/target*100:0,status=ach>=100?"ON TARGET":ach>=90?"WATCH":"SHORT",tr=document.createElement("tr");tr.innerHTML=`<td>${date}</td><td>${esc(r.line)}</td><td>${esc(r.po)}</td><td>${esc(r.buyer)}</td><td>${esc(r.style)}</td><td>${day}</td><td>${lc}%</td><td>${target.toLocaleString()}</td><td><input type="number" min="0" value="${actual}" onchange="saveActual('${date}',${r.id},this.value)"></td><td>${variance.toLocaleString()}</td><td>${ach.toFixed(1)}%</td><td><span class="${status==="ON TARGET"?"risk-green":status==="WATCH"?"risk-yellow":"risk-red"}">${status}</span></td>`;b.appendChild(tr);count++}));filterSummary.textContent=`Showing ${count} actual production records`}
+function saveActual(d,id,v){actualData[actualKey(d,id)]=+v;saveData();renderActualTable();updateDashboard();renderCharts();renderLinePerformance()}
+function clearActualFilters(){["actualFilterDate","actualFilterLine","actualFilterPO","actualFilterBuyer","actualFilterStyle"].forEach(id=>document.getElementById(id).value="");renderActualTable()}
+function uniqueValues(k){return [...new Set(planningData.map(r=>r[k]))].sort()}
+function fillSelect(id,values,first){let s=document.getElementById(id),cur=s.value;s.innerHTML=`<option value="">${first}</option>`;values.forEach(v=>{let o=document.createElement("option");o.value=v;o.textContent=v;s.appendChild(o)});if(values.includes(cur))s.value=cur}
+function populateFilters(){fillSelect("actualFilterLine",uniqueValues("line"),"All Lines");fillSelect("actualFilterPO",uniqueValues("po"),"All POs");fillSelect("actualFilterBuyer",uniqueValues("buyer"),"All Buyers");fillSelect("actualFilterStyle",uniqueValues("style"),"All Styles");fillSelect("chartLineFilter",uniqueValues("line"),"All Lines");fillSelect("linePerformanceFilter",uniqueValues("line"),"All Lines");fillSelect("capacityStyleFilter",uniqueValues("style"),"All Styles")}
+
+function getDashboardDates(){return{from:dashboardFromDate.value,to:dashboardToDate.value}}
+function applyDashboardDateFilter(){let{from,to}=getDashboardDates();if(from&&to&&from>to)return alert("From Date cannot be after To Date.");updateDashboard()}
+function clearDashboardDateFilter(){dashboardFromDate.value="";dashboardToDate.value="";updateDashboard()}
+function setCurrentMonthDashboard(){let d=new Date(),f=new Date(d.getFullYear(),d.getMonth(),1),l=new Date(d.getFullYear(),d.getMonth()+1,0);dashboardFromDate.value=f.toISOString().split("T")[0];dashboardToDate.value=l.toISOString().split("T")[0];updateDashboard()}
+function setCurrentWeekDashboard(){let d=new Date(),day=d.getDay(),diff=day===0?-6:1-day,m=new Date(d);m.setDate(d.getDate()+diff);let s=new Date(m);s.setDate(m.getDate()+6);dashboardFromDate.value=m.toISOString().split("T")[0];dashboardToDate.value=s.toISOString().split("T")[0];updateDashboard()}
+function updateDashboard(){let{from,to}=getDashboardDates(),planned=0,base=0,actual=0,sam=0,high=0;planningData.forEach(r=>{let c=calculateRow(r),inc=(!from||c.finish>=from)&&(!to||r.start<=to);if(inc){planned+=+r.qty;base+=c.baseTarget;sam+=c.totalSAM;if(c.risk==="HIGH")high++}});Object.keys(actualData).forEach(k=>{let d=k.split("_")[0];if((!from||d>=from)&&(!to||d<=to))actual+=+actualData[k]||0});let ach=base?actual/base*100:0,short=Math.max(0,base-actual),t=getToday(),tt=0,ta=0;planningData.forEach(r=>{tt+=getTargetForDate(r,t);ta+=+actualData[actualKey(t,r.id)]||0});kpiPlanned.textContent=planned.toLocaleString();kpiBaseTarget.textContent=base.toLocaleString();kpiActual.textContent=actual.toLocaleString();kpiAchievement.textContent=ach.toFixed(1)+"%";kpiShortfall.textContent=short.toLocaleString();kpiToday.textContent=tt.toLocaleString()+" / "+ta.toLocaleString();kpiSAM.textContent=Math.round(sam).toLocaleString();kpiRisk.textContent=high;dashboardFilterSummary.textContent=from||to?`Dashboard period: ${from||"Start"} → ${to||"End"}`:"Dashboard period: All available data"}
+
+function renderCharts(){let lf=chartLineFilter.value,days=+chartPeriod.value,t=new Date(getToday()+"T00:00:00"),labels=[],targets=[],actuals=[];for(let i=days-1;i>=0;i--){let d=new Date(t);d.setDate(t.getDate()-i);let date=d.toISOString().split("T")[0];labels.push(date);let tar=0,act=0;planningData.forEach(r=>{if(lf&&r.line!==lf)return;tar+=getTargetForDate(r,date);act+=+actualData[actualKey(date,r.id)]||0});targets.push(tar);actuals.push(act)}if(dailyChart)dailyChart.destroy();dailyChart=new Chart(document.getElementById("dailyChart"),{type:"line",data:{labels,datasets:[{label:"Target",data:targets,tension:.3},{label:"Actual",data:actuals,tension:.3}]},options:{responsive:true,maintainAspectRatio:false}});
+let lines=uniqueValues("line"),lt=[],la=[];lines.forEach(line=>{let tar=0,act=0;for(let i=0;i<days;i++){let d=new Date(t);d.setDate(t.getDate()-i);let date=d.toISOString().split("T")[0];planningData.forEach(r=>{if(r.line===line){tar+=getTargetForDate(r,date);act+=+actualData[actualKey(date,r.id)]||0}})}lt.push(tar);la.push(act)});if(lineChart)lineChart.destroy();lineChart=new Chart(document.getElementById("lineChart"),{type:"bar",data:{labels:lines,datasets:[{label:"Target",data:lt},{label:"Actual",data:la}]},options:{responsive:true,maintainAspectRatio:false}})}
+function renderLinePerformance(){let b=linePerformanceBody;b.innerHTML="";let f=linePerformanceFilter.value,lines=uniqueValues("line").filter(x=>!f||x===f);lines.forEach(line=>{let target=0,actual=0,planned=0;planningData.forEach(r=>{if(r.line!==line)return;planned+=+r.qty;target+=getTargetForDate(r,getToday());Object.keys(actualData).forEach(k=>{if(k.split("_")[1]==r.id)actual+=+actualData[k]||0})});let variance=actual-target,ach=target?actual/target*100:0,balance=Math.max(0,planned-actual),status=ach>=100?"ON TARGET":ach>=90?"WATCH":"SHORT",tr=document.createElement("tr");tr.innerHTML=`<td>${line}</td><td>${target.toLocaleString()}</td><td>${actual.toLocaleString()}</td><td>${variance.toLocaleString()}</td><td>${ach.toFixed(1)}%</td><td>${planned.toLocaleString()}</td><td>${actual.toLocaleString()}</td><td>${balance.toLocaleString()}</td><td><span class="${status==="ON TARGET"?"risk-green":status==="WATCH"?"risk-yellow":"risk-red"}">${status}</span></td>`;b.appendChild(tr)});linePerformanceFilterSummary.textContent=f?`Showing performance for ${f}`:"Showing all lines"}
+function clearLinePerformanceFilter(){linePerformanceFilter.value="";renderLinePerformance()}
+
+async function runAI(){
+  const btn=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Run Narrow AI'));
+  if(btn){btn.disabled=true;btn.textContent='⏳ AI Analyzing...';}
+  try{
+    const payload={
+      settings,
+      planningData,
+      actualData,
+      today:getToday()
+    };
+    const res=await fetch('/api/narrow-ai',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'AI request failed');
+    aiOutput.innerHTML=data.html||`<div class="ai-item">${esc(data.text||'No AI response received.')}</div>`;
+  }catch(err){
+    aiOutput.innerHTML=`<div class="ai-item"><b>⚠️ Narrow AI connection error</b><br>${esc(err.message)}<br><br>Make sure the dashboard is opened through the Node.js server and your OPENAI_API_KEY is configured on the server.</div>`;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🤖 Run Narrow AI';}
+  }
+}
+
+function renderCalendar(){calendarHead.innerHTML="<tr><th>Line / Style</th>"+Array.from({length:21},(_,i)=>`<th>${addDays(getToday(),i)}</th>`).join("")+"</tr>";calendarBody.innerHTML="";planningData.forEach(r=>{let tr=document.createElement("tr");tr.innerHTML=`<td class="calendar-style">${esc(r.line)} - ${esc(r.style)}<br><small>${r.status}</small></td>`;for(let i=0;i<21;i++){let d=addDays(getToday(),i),t=getTargetForDate(r,d),a=+actualData[actualKey(d,r.id)]||0,lc=getLC(i+1);tr.innerHTML+=`<td>${t?`T:${t}<br>A:${a}<br>LC:${lc}%`:a?`A:${a}`:""}</td>`}calendarBody.appendChild(tr)})}
+function renderCapacity(){let b=capacityBody;b.innerHTML="";let st=capacityStyleFilter.value,ss=capacityStatusFilter.value,rows=planningData.filter(r=>(!st||r.style===st)&&(!ss||r.status===ss)),q=0,base=0,high=0;rows.forEach(r=>{let c=calculateRow(r);q+=+r.qty;base+=c.baseTarget;if(c.risk==="HIGH")high++;let tr=document.createElement("tr");tr.innerHTML=`<td>${esc(r.line)}</td><td><span class="${r.status==="Running"?"status-running":"status-upcoming"}">${r.status}</span></td><td>${esc(r.po)}</td><td>${esc(r.buyer)}</td><td>${esc(r.style)}</td><td>${(+r.qty).toLocaleString()}</td><td>${c.baseTarget.toLocaleString()}</td><td>${r.achieve}%</td><td>${c.otsLoading.toFixed(1)}%</td><td>${c.finish}</td><td>${r.ots}</td><td>${c.productionDays}</td><td><span class="${c.risk==="HIGH"?"risk-red":c.risk==="MEDIUM"?"risk-yellow":"risk-green"}">${c.risk}</span></td>`;b.appendChild(tr)});capacityFilterSummary.textContent=`Showing ${rows.length} records`;capacitySummaryTotals.innerHTML=`Total Planned Qty: ${q.toLocaleString()} &nbsp; | &nbsp; Base Daily Target: ${base.toLocaleString()} &nbsp; | &nbsp; High Risk: ${high}`}
+function clearCapacityStyleFilter(){capacityStyleFilter.value="";capacityStatusFilter.value="";renderCapacity()}
+
+function csvEscape(v){return`"${String(v??"").replace(/"/g,'""')}"`}
+function downloadCSV(name,rows){let blob=new Blob([rows.map(r=>r.map(csvEscape).join(",")).join("\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),100)}
+function exportPlanningCSV(){let rows=[["Line","Status","PO","Buyer","Style","Planned Qty","SMV","Operators","Efficiency %","Hours","Start Date","OTS Date","Total SAM","Base Daily Target","Production Days","Avg LC %","Calculated Finish","OTS Loading %","Risk"]];planningData.forEach(r=>{let c=calculateRow(r);rows.push([r.line,r.status,r.po,r.buyer,r.style,r.qty,r.smv,r.operators,r.achieve,r.hours,r.start,r.ots,Math.round(c.totalSAM),c.baseTarget,c.productionDays,c.avgLC.toFixed(1),c.finish,c.otsLoading.toFixed(1),c.risk])});downloadCSV("Sewing_Planning.csv",rows)}
+function exportActualCSV(){let rows=[["Date","Line","PO","Buyer","Style","Day","LC %","Target Qty","Actual Qty","Variance","Achievement %","Status"]];let t=getToday();planningData.forEach(r=>{for(let i=0;i<31;i++){let d=addDays(t,i),tar=getTargetForDate(r,d),act=+actualData[actualKey(d,r.id)]||0;if(!tar&&!act)continue;let day=1,x=r.start;while(x<d){if(isWorkingDay(x))day++;x=addDays(x,1)}let ach=tar?act/tar*100:0;rows.push([d,r.line,r.po,r.buyer,r.style,day,getLC(day),tar,act,act-tar,ach.toFixed(1),ach>=100?"ON TARGET":ach>=90?"WATCH":"SHORT"])}});downloadCSV("Daily_Actual_Production.csv",rows)}
+function resetDemo(){if(!confirm("Reset all planning and actual data to demo data?"))return;localStorage.removeItem("sewingPlanningData");localStorage.removeItem("sewingActualData");planningData=[];actualData={};createDemoData();saveData();initialize()}
+function recalculateAll(){saveData();populateFilters();renderPlanning();renderActualTable();updateDashboard();renderCharts();renderLinePerformance();renderCalendar();renderCapacity()}
+function initialize(){loadData();loadSettingsUI();populateFilters();renderPlanning();renderActualTable();updateDashboard();renderCharts();renderLinePerformance();renderCalendar();renderCapacity()}
+initialize();
+</script>
+</body>
+</html>
